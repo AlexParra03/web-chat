@@ -1,0 +1,9 @@
+#chat-list {
+    padding-left: 10px;
+    padding-right: 10px;
+    max-width: 30vw;
+}
+
+#chat-list div {
+    padding-top: 5px;
+}

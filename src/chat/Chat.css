@@ -1,0 +1,28 @@
+.chat-text {
+    padding-left: 14px;
+    text-align: left;
+    /* float: left; */
+}
+
+.chat-sender {
+    padding-left: 20px;
+}
+
+#chat-form-container {
+    text-align: left;
+}
+
+#chat-form {
+    width: 80vw;
+    margin-left: 10px;
+}
+
+#chat-button {
+    margin-top: 12px;
+    margin-left: 5px;
+    width: 4vw;
+}
+
+#chat-form-container {
+    padding-bottom: 10px;
+}

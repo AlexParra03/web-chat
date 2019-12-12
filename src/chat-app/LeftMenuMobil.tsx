@@ -1,7 +1,7 @@
 import React from 'react';
 import {Drawer, List, ListItemText, Divider, Typography, Badge, ListItem} from '@material-ui/core';
 import PersonIcon from '@material-ui/icons/Person';
-import './LeftMenu.css'
+import './LeftMenuMobil.css'
 
 const chatRooomsMock = [
     {
@@ -31,7 +31,7 @@ const chatRooomsMock = [
     }
 ]
 
-export default function LeftMenu() {
+export default function LeftMenuMobil() {
 
     const chatItemsComponents = chatRooomsMock.map( (chatRoom, i) => {
         const chatRoomTitleAndUsers = <div> {chatRoom.title} <Badge badgeContent={chatRoom.users}><PersonIcon color="primary"></PersonIcon> </Badge></div>

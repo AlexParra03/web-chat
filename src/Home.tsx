@@ -163,7 +163,6 @@ function Home(props: any) {
                                 });
                                 const json = await response.json();
                                 props.setToken(json.token);
-                                props.setCurrentUser(json.token);
                                 console.log(json);
                             }}>
                                 Login

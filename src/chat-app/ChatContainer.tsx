@@ -7,6 +7,7 @@ import { Button } from '@material-ui/core';
 import Box from '@material-ui/core/Box';
 import Input from '@material-ui/core/Input';
 import InputLabel from '@material-ui/core/InputLabel';
+import {Chatroom} from './LeftMenu';
 import GridList from '@material-ui/core/GridList';
 
 import { Redirect } from 'react-router-dom';
@@ -24,7 +25,7 @@ interface ChatDialog {
 }
 
 // No tuplicated TABS / ROOMS
-const tabMocks = ["Cars", "Depression", "Magic1", "Magic2", "Magic3", "Magic4", "Magic5", "Magic6", "Magic7", "Magic8", "Magic9"];
+let currentRooms: string[] = [];
 
 const chatMocks: Array<ChatDialog> = [
     { sender: "Alex", text: "Hello" },
@@ -74,6 +75,24 @@ function Chat(props: ChatProps) {
     const [chatItems, setChatItems] = React.useState<ChatDialog[]>(chatMocks)
     const [inputText, setInputText] = React.useState<string>("");
     const [currentTab, setCurrentTab] = React.useState<string | null>(null)
+    const [activeRooms, setActiveRooms] = React.useState<string[] | null>(null)
+
+    if(activeRooms == null) {
+        fetch("https://localhost:8000/rooms", {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'auth-token': props.token
+                // 'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            mode: 'cors', // no-cors, *cors, same-origin
+        }).then(res => res.json())
+            .then(rooms => {
+                setActiveRooms(rooms.map( function(room: Chatroom) {return room.name} ));
+            });
+    }
+
+
 
     const chatItemsComponents = chatMocks.map((dialog, i) => {
         return (
@@ -100,7 +119,7 @@ function Chat(props: ChatProps) {
 
     document.cookie = "MYCOOKIE";
     console.log('XXX', props.token);
-    const ws = new WebSocket(`wss://helllo:value@localhost:8000/?token=${encodeURI(props.token)}`, "echo-protocol");
+    const ws = new WebSocket(`wss://helllo:value@localhost:8000/main?token=${encodeURI(props.token)}`, "echo-protocol");
     ws.onopen = (ev: any) => {
         ws.send("hello");
     };
@@ -117,24 +136,24 @@ function Chat(props: ChatProps) {
                 </Grid>
                 <Grid item xs={10} >
 
-                    {tabMocks.length > 0 ?
+                    {activeRooms != null && activeRooms.length > 0 ?
                         <Tabs value={currentTab} scrollButtons="auto" variant="scrollable" >
-                            {createTabs(tabMocks, setCurrentTab)}
+                            {createTabs(activeRooms, setCurrentTab)}
                         </Tabs> : null}
 
                     <div>
-                    <Grid container id="chat-form-container">
-                        {chatItemsComponents}
-                    </Grid>
+                        <Grid container id="chat-form-container">
+                            {chatItemsComponents}
+                        </Grid>
                     </ div>
 
                 </Grid>
-                    <FormControl id="chat-form">
-                        <InputLabel htmlFor="component-simple">Type here</InputLabel>
-                        <Input id="component-simple" value={inputText} onChange={(e) => { setInputText(e.target.value) }} />
-                    </FormControl>
-                    <Button variant="outlined" id="chat-button">
-                        Send
+                <FormControl id="chat-form">
+                    <InputLabel htmlFor="component-simple">Type here</InputLabel>
+                    <Input id="component-simple" value={inputText} onChange={(e) => { setInputText(e.target.value) }} />
+                </FormControl>
+                <Button variant="outlined" id="chat-button">
+                    Send
                         </Button>
 
             </Grid>

@@ -16,7 +16,7 @@ const App: React.FC = (props: any) => {
 
   let AppContent = null;
   // TODO: Make authentication function
-  const isAuthenticated = !!props.token || true ;
+  const isAuthenticated = !!props.token ;
   if (!isAuthenticated) {
     AppContent = () => (
       <div className="App">
@@ -46,6 +46,7 @@ const App: React.FC = (props: any) => {
   } else {
     for(const authRoute of authRoutes) {
       routes.push(<Redirect to='/' />);
+      break;
     }
   }
   console.log(routes);

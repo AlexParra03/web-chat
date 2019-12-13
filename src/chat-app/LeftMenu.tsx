@@ -4,104 +4,40 @@ import PersonIcon from '@material-ui/icons/Person';
 import { Redirect } from 'react-router';
 import "./LeftMenu.css"
 
-const chatRooomsMock = [
-    {
-        title: "Cars chat",
-        description: "This chat is about cars, specially nizzan and chevrolet",
-        users: 27
-    },
-    {
-        title: "Cars chat",
-        description: "This chat is about cars, specially nizzan and chevrolet",
-        users: 27
-    },
-    {
-        title: "Cars chat",
-        description: "This chat is about cars, specially nizzan and chevrolet",
-        users: 27
-    },
-    {
-        title: "Cars chat",
-        description: "This chat is about cars, specially nizzan and chevrolet",
-        users: 27
-    },
-    {
-        title: "Cars chat",
-        description: "This chat is about cars, specially nizzan and chevrolet aaaaaaaa aaaaaaaaaaaaaaaaaaaaaaaaa aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa aaaaaaaaa",
-        users: 27
-    },
-    {
-        title: "Cars chat",
-        description: "This chat is about cars, specially nizzan and chevrolet",
-        users: 27
-    },
-    {
-        title: "Cars chat",
-        description: "This chat is about cars, specially nizzan and chevrolet",
-        users: 27
-    },
-    {
-        title: "Cars chat",
-        description: "This chat is about cars, specially nizzan and chevrolet",
-        users: 27
-    },
-    {
-        title: "Cars chat",
-        description: "This chat is about cars, specially nizzan and chevrolet",
-        users: 27
-    },
-    {
-        title: "Cars chat",
-        description: "This chat is about cars, specially nizzan and chevrolet",
-        users: 27
-    },
-    {
-        title: "Cars chat",
-        description: "This chat is about cars, specially nizzan and chevrolet",
-        users: 27
-    },
-    {
-        title: "Cars chat",
-        description: "This chat is about cars, specially nizzan and chevrolet",
-        users: 27
-    },
-    {
-        title: "Cars chat",
-        description: "This chat is about cars, specially nizzan and chevrolet",
-        users: 27
-    },
-    {
-        title: "Cars chat",
-        description: "This chat is about cars, specially nizzan and chevrolet",
-        users: 27
-    },
-    {
-        title: "Cars chat",
-        description: "This chat is about cars, specially nizzan and chevrolet",
-        users: 27
-    },
-    {
-        title: "Cars chat",
-        description: "This chat is about cars, specially nizzan and chevrolet",
-        users: 27
-    },
-    {
-        title: "Cars chat",
-        description: "This chat is about cars, specially nizzan and chevrolet",
-        users: 27
-    },
-]
+export interface Chatroom {
+    id: number,
+    name: string,
+    description: string,
+    users: number
+}
 
+function fetchChatroom(setChatroomsList: Function) {
+        const response =  fetch("https://localhost:8000/rooms", {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+                // 'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            mode: 'cors', // no-cors, *cors, same-origin
+        }).then(data => data.json())
+        .then(chatList => {console.log(chatList)});
+
+    
+}
 
 export default function LeftMenu() {
 
+    const [chatroomsList, setChatroomsList] = React.useState<Chatroom[]>([]);
     const [createChatRedirect, setCreateChatRedirect] = React.useState<boolean>(false)
+
+    fetchChatroom(setChatroomsList);
+
     if (createChatRedirect) {
         return <Redirect to='/create-chat' />
     }
 
-    const chatItemsComponents = chatRooomsMock.map((chatRoom, i) => {
-        const chatRoomTitleAndUsers = <div> {chatRoom.title} <Badge badgeContent={chatRoom.users}><PersonIcon color="primary"></PersonIcon> </Badge></div>
+    const chatItemsComponents = chatroomsList.map((chatRoom, i) => {
+        const chatRoomTitleAndUsers = <div> {chatRoom.name} <Badge badgeContent={chatRoom.users}><PersonIcon color="primary"></PersonIcon> </Badge></div>
         return (
                 <ListItem button>
                     <ListItemText

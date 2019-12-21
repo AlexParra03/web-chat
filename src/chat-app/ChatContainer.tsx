@@ -7,7 +7,7 @@ import { Button } from '@material-ui/core';
 import Box from '@material-ui/core/Box';
 import Input from '@material-ui/core/Input';
 import InputLabel from '@material-ui/core/InputLabel';
-import {Chatroom} from './LeftMenu';
+import { Chatroom } from './LeftMenu';
 import GridList from '@material-ui/core/GridList';
 
 import { Redirect } from 'react-router-dom';
@@ -27,33 +27,8 @@ interface ChatDialog {
 // No tuplicated TABS / ROOMS
 let currentRooms: string[] = [];
 
-const chatMocks: Array<ChatDialog> = [
+const chatMocks: ChatDialog[] = [
     { sender: "Alex", text: "Hello" },
-    { sender: "Joe", text: "HIII" },
-    { sender: "Alexxxxxxxxx xxxxxxxxxxxxxxx", text: "How are you? How are you? How are you? How are you? How are you?" },
-    { sender: "Joe", text: "Fine, and you?" },
-    { sender: "Joe", text: "Fine, and you?" },
-    { sender: "Joe", text: "Fine, and you?" },
-    { sender: "Joe", text: "Fine, and you?" },
-    { sender: "Joe", text: "Fine, and you?" },
-    { sender: "Joe", text: "Fine, and you?" },
-    { sender: "Joe", text: "Fine, and you?" },
-    { sender: "Joe", text: "Fine, and you?" },
-    { sender: "Joe", text: "Fine, and you?" },
-    { sender: "Joe", text: "Fine, and you?" },
-    { sender: "Joe", text: "Fine, and you?" },
-    { sender: "Joe", text: "Fine, and you?" },
-    { sender: "Joe", text: "Fine, and you?" },
-    { sender: "Joe", text: "Fine, and you?" },
-    { sender: "Joe", text: "Fine, and you?" },
-    { sender: "Joe", text: "Fine, and you?" },
-    { sender: "Joe", text: "Fine, and you?" },
-    { sender: "Joe", text: "Fine, and you?" },
-    { sender: "Joe", text: "Fine, and you?" },
-    { sender: "Joe", text: "Fine, and you?" },
-    { sender: "Joe", text: "Fine, and you?" },
-    { sender: "Joe", text: "Fine, and you?" },
-    { sender: "Alex", text: "Also fine." },
 ]
 
 interface ChatProps {
@@ -72,12 +47,12 @@ function createTabs(tabs: string[], setCurrentTab: Function) {
 
 function Chat(props: ChatProps) {
 
-    const [chatItems, setChatItems] = React.useState<ChatDialog[]>(chatMocks)
+    const [chatItems, setChatItems] = React.useState<ChatDialog[]>([])
     const [inputText, setInputText] = React.useState<string>("");
     const [currentTab, setCurrentTab] = React.useState<string | null>(null)
     const [activeRooms, setActiveRooms] = React.useState<string[] | null>(null)
-
-    if(activeRooms == null) {
+    const [websocket, setWebsocket] = React.useState<WebSocket | null>(null);
+    if (activeRooms == null) {
         fetch("https://localhost:8000/rooms", {
             method: 'GET',
             headers: {
@@ -88,13 +63,12 @@ function Chat(props: ChatProps) {
             mode: 'cors', // no-cors, *cors, same-origin
         }).then(res => res.json())
             .then(rooms => {
-                setActiveRooms(rooms.map( function(room: Chatroom) {return room.name} ));
+                setActiveRooms(rooms.map(function (room: Chatroom) { return room.name }));
             });
     }
 
-
-
-    const chatItemsComponents = chatMocks.map((dialog, i) => {
+    console.log('F', chatItems);
+    const chatItemsComponents = chatItems.map((dialog, i) => {
         return (
             <> <ListItem key={i} > <ListItemText key={i} primary={dialog.sender + ': ' + dialog.text} />  </ ListItem> <Divider /> </>)
     });
@@ -118,11 +92,19 @@ function Chat(props: ChatProps) {
     });
 
     document.cookie = "MYCOOKIE";
-    console.log('XXX', props.token);
-    const ws = new WebSocket(`wss://helllo:value@localhost:8000/main?token=${encodeURI(props.token)}`, "echo-protocol");
-    ws.onopen = (ev: any) => {
-        ws.send("hello");
-    };
+    if (websocket == null) {
+        const ws = new WebSocket(`wss://localhost:8000/chat?token=${encodeURI(props.token)}`, "echo-protocol");
+        setWebsocket(ws);
+        ws.onmessage = (ev) => {console.log(chatItems); receiveMessage( JSON.parse(ev.data), chatItems, setChatItems)}
+        ws.onopen = (ev: any) => {
+            const object = {
+                token: props.token,
+                message: "hello"
+            };
+            ws.send(JSON.stringify(object));
+        };
+    }
+
 
 
     return (
@@ -136,10 +118,10 @@ function Chat(props: ChatProps) {
                 </Grid>
                 <Grid item xs={10} >
 
-                    {activeRooms != null && activeRooms.length > 0 ?
+                    {/* {activeRooms != null && activeRooms.length > 0 ?
                         <Tabs value={currentTab} scrollButtons="auto" variant="scrollable" >
                             {createTabs(activeRooms, setCurrentTab)}
-                        </Tabs> : null}
+                        </Tabs> : null} */}
 
                     <div>
                         <Grid container id="chat-form-container">
@@ -148,19 +130,47 @@ function Chat(props: ChatProps) {
                     </ div>
 
                 </Grid>
-                <FormControl id="chat-form">
-                    <InputLabel htmlFor="component-simple">Type here</InputLabel>
-                    <Input id="component-simple" value={inputText} onChange={(e) => { setInputText(e.target.value) }} />
-                </FormControl>
-                <Button variant="outlined" id="chat-button">
-                    Send
+                <form onSubmit={(ev) => {
+                    ev.preventDefault();
+                    if (websocket != null) {
+                        sendMessage(websocket, props.token, inputText, setInputText);
+                    }
+                    return false;
+                }}>
+                    <FormControl id="chat-form">
+                        <InputLabel htmlFor="chat-input-bar">Type here</InputLabel>
+                        <Input id="chat-input-bar" value={inputText} onChange={(e) => { setInputText(e.target.value) }} />
+                    </FormControl>
+                    <Button variant="outlined" id="chat-button" type="submit">
+                        Send
                         </Button>
+                </form>
 
             </Grid>
         </Paper>
 
     );
 
+}
+
+function receiveMessage(message: ChatDialog, currentChatItems: ChatDialog[], setChatItems: Function) {
+    const newDialogs = [];
+    let key = 0;
+    for( const chatItem of currentChatItems) {
+        newDialogs.push({...chatItem, key: key})
+        key++
+    }
+    newDialogs.push(message);
+    setChatItems(newDialogs);
+    console.log('xd',message, currentChatItems, newDialogs);
+}
+
+function sendMessage(ws: WebSocket, token: string, message: string, clearInputText: Function) {
+    const payload = { token, message };
+    clearInputText('');
+    console.log(ws);
+    ws.send(JSON.stringify(payload));
+    console.log("SENT:", payload);
 }
 
 function mapStateToPros(state: any) {

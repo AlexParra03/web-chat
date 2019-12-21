@@ -6,7 +6,7 @@ import { Header } from './chat-app/Header';
 // import {Redirect} from 'react-router';
 import "./Home.css";
 import { connect } from 'react-redux';
-import {Redirect} from 'react-router-dom';
+import { Redirect } from 'react-router-dom';
 import setCurrentUser from './redux/user/setCurrentUser';
 import setToken from './redux/user/setToken';
 
@@ -45,7 +45,11 @@ function Home(props: any) {
 
                 <Grid item xs={4}>
                     <Paper>
-                        <form id="form-register">
+                        <form id="form-register" onSubmit={(ev) => {
+                            ev.preventDefault();
+                            submitRegistration(registerData, props.setToken);
+                            return false;
+                        }}>
                             <TextField
                                 required
                                 id="standard-required"
@@ -72,7 +76,6 @@ function Home(props: any) {
                             <br />
 
                             <TextField
-                                id="standard-password-input"
                                 label="Password"
                                 type="password"
                                 autoComplete="current-password"
@@ -87,7 +90,6 @@ function Home(props: any) {
                             <br />
 
                             <TextField
-                                id="standard-password-input"
                                 label="Re-enter Password"
                                 type="password"
                                 autoComplete="current-password"
@@ -100,22 +102,10 @@ function Home(props: any) {
 
                             <br />
 
-                            <Button variant="contained" color="primary" onClick={async (ev) => {
-
-                                const response = await fetch("https://localhost:8000/register", {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json'
-                                        // 'Content-Type': 'application/x-www-form-urlencoded',
-                                    },
-                                    mode: 'cors', // no-cors, *cors, same-origin
-                                    body: JSON.stringify(registerData)
-                                });
-                                const json = await response.json();
-                                props.setToken(json.token);
-                                console.log(json);
+                            <Button variant="contained" color="primary" type="submit" onClick={async (ev) => {
+                                await submitRegistration(registerData, props.setToken);
                             }}>>
-                                    Register
+                                                    Register
                             </Button>
                         </ form>
                     </Paper>
@@ -124,7 +114,12 @@ function Home(props: any) {
 
                 <Grid item xs={4}>
                     <Paper>
-                        <form>
+                        <form onSubmit={(ev) => {
+                            ev.preventDefault();
+                            console.log(loginData);
+                            submitLogin(loginData, props.setToken);
+                            return false;
+                        }}>
                             <TextField
                                 required
                                 id="standard-required"
@@ -132,14 +127,14 @@ function Home(props: any) {
                                 margin="normal"
                                 onChange={(ev) => {
                                     setLoginData(
-                                        { ...loginData, nickname: ev.target.value.trim() })
+                                        { ...loginData, nickname: ev.target.value.trim() });
+
                                 }}
                             />
 
                             <br />
 
                             <TextField
-                                id="standard-password-input"
                                 label="Password"
                                 type="password"
                                 autoComplete="current-password"
@@ -150,21 +145,7 @@ function Home(props: any) {
                                 }}
                             />
                             <br />
-                            <Button variant="contained" color="primary" onClick={async (ev) => {
-                                console.log(JSON.stringify(loginData));
-                                const response = await fetch("https://localhost:8000/login", {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json'
-                                        // 'Content-Type': 'application/x-www-form-urlencoded',
-                                    },
-                                    mode: 'cors', // no-cors, *cors, same-origin
-                                    body: JSON.stringify(loginData)
-                                });
-                                const json = await response.json();
-                                props.setToken(json.token);
-                                console.log(json);
-                            }}>
+                            <Button variant="contained" color="primary" type="submit">
                                 Login
                             </Button>
                         </form>
@@ -176,7 +157,38 @@ function Home(props: any) {
         </Paper>)
 }
 
-const mapDispatchToProps = (dispatch : any) => ({
+async function submitRegistration(registerData: RegisterData, setToken: Function) {
+    console.log(JSON.stringify(registerData));
+    const response = await fetch("https://localhost:8000/register", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+            // 'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        mode: 'cors', // no-cors, *cors, same-origin
+        body: JSON.stringify(registerData)
+    });
+    const json = await response.json();
+    setToken(json.token);
+    console.log(json);
+}
+
+async function submitLogin(loginData: LoginData, setToken: Function) {
+    const response = await fetch("https://localhost:8000/login", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+            // 'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        mode: 'cors', // no-cors, *cors, same-origin
+        body: JSON.stringify(loginData)
+    });
+    const json = await response.json();
+    setToken(json.token);
+    console.log(json);
+}
+
+const mapDispatchToProps = (dispatch: any) => ({
     setCurrentUser: (user: any) => dispatch(setCurrentUser(user)),
     setToken: (token: string) => dispatch(setToken(token))
 });

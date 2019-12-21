@@ -15,7 +15,7 @@ function isDescriptionValid(text: string) {
     return text.trim().split(' ').length <= DESCRIPTION_LIMIT && text !== '';
 }
 
-export default function LeftMenu() {
+export default function CreateChat() {
 
     const [chatData, setChatData] = React.useState<ChatData>({ title: null, description: null })
 

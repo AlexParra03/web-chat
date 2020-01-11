@@ -4,6 +4,7 @@ import PersonIcon from '@material-ui/icons/Person';
 import { Redirect } from 'react-router';
 import "./LeftMenu.css"
 import { connect } from 'react-redux';
+import setRooms from '../redux/user/setRooms';
 
 export interface Chatroom {
     name: string,
@@ -24,21 +25,51 @@ function fetchChatroom(setChatroomsList: Function, token: string) {
         .then(chatList => { setChatroomsList(chatList) });
 }
 
-function joinChatroom(name: string, token: string) {
-    const response = fetch("https://localhost:8000/rooms/" + encodeURI(name), {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            // 'Content-Type': 'application/x-www-form-urlencoded',
-            'auth-token': token,
-        },
-        mode: 'cors', // no-cors, *cors, same-origin
-    }).then(data => data.json())
-        .then(msg => { console.log(msg) });
+async function joinChatroom(name: string, token: string, setChatrooms: Function, currentRooms: string[] | null) {
+    try {
+        const response = await fetch("https://localhost:8000/rooms/" + encodeURI(name), {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                // 'Content-Type': 'application/x-www-form-urlencoded',
+                'auth-token': token,
+            },
+            mode: 'cors', // no-cors, *cors, same-origin
+        });
+        // }).then(data => data.json())
+        //     .then(msg => {
+        //         console.log(msg)
+        //         // if no error
+        //         if (currentRooms == null) {
+        //             setChatrooms([name]);
+        //         } else {
+        //             if (currentRooms.filter(el => el === name).length === 0) {
+        //                 setChatrooms([...currentRooms, name]);
+        //             }
+        //         }
+        //     });
+
+        const msg = await response.json();
+        console.log(msg)
+        // if no error
+        if (currentRooms == null) {
+            setChatrooms([name]);
+        } else {
+            if (currentRooms.filter(el => el === name).length === 0) {
+                setChatrooms([...currentRooms, name]);
+            }
+        }
+    } catch (error) {
+        console.log("Error joining rooms")
+    }
+
+
 }
 
 interface LeftMenuProps {
     token: string
+    setRooms: Function,
+    rooms: string[] | null
 }
 
 function LeftMenu(props: LeftMenuProps) {
@@ -50,18 +81,21 @@ function LeftMenu(props: LeftMenuProps) {
     if (props.token != null && chatroomsList == null) {
         fetchChatroom(setChatroomsList, props.token);
     }
-        
+
     if (createChatRedirect) {
         return <Redirect to='/create-chat' />
     }
 
-    let chatItemsComponents : JSX.Element[] = [];
-    if(chatroomsList != null) {
+    let chatItemsComponents: JSX.Element[] = [];
+    if (chatroomsList != null) {
         chatItemsComponents = chatroomsList.map((chatroom, i) => {
-            console.log(chatroom.users)
             const chatRoomTitleAndUsers = <div> {chatroom.name} <Badge badgeContent={'' + chatroom.users}><PersonIcon color="primary"></PersonIcon> </Badge></div>
             return (
-                <ListItem button onClick={(ev) => {joinChatroom(chatroom.name, props.token)} }>
+                <ListItem button onClick={async (ev) => {
+                    await joinChatroom(chatroom.name, props.token, props.setRooms, props.rooms);
+                    // This refreshes stats after async call
+                    fetchChatroom(setChatroomsList, props.token);
+                }}>
                     <ListItemText
                         key={i}
                         primary={chatRoomTitleAndUsers}
@@ -80,7 +114,7 @@ function LeftMenu(props: LeftMenuProps) {
             );
         });
     }
-    
+
 
 
     return (
@@ -103,8 +137,16 @@ function LeftMenu(props: LeftMenuProps) {
 }
 
 const mapStateToProps = (state: any) => ({
-    currentUser: state,
-    token: state.user.token
+    token: state.user.token,
+    rooms: state.user.rooms
 });
 
-export default connect(mapStateToProps)(LeftMenu);
+const mapDispatchToProps = (dispatch: any) => ({
+    setRooms: (rooms: string[]) => dispatch(setRooms(rooms))
+});
+
+
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps
+)(LeftMenu);

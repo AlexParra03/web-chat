@@ -16,17 +16,25 @@ import LeftMenuMobil from './LeftMenuMobil';
 import LeftMenu from './LeftMenu';
 import { Header } from './Header';
 import { connect } from 'react-redux';
+import setChats from '../redux/user/setChats';
 
 
 
-interface ChatDialog {
+export interface ChatDialog {
     sender: string,
     text: string
 }
 
-interface WebsocketChat {
+interface WebsocketChatToServer {
     token: string,
     message: string,
+    room: string
+}
+
+interface WebsocketChatToClient {
+    username: string,
+    message: string,
+    room: string
 }
 
 // No tuplicated TABS / ROOMS
@@ -38,7 +46,9 @@ const chatMocks: ChatDialog[] = [
 
 interface ChatProps {
     token: string,
-    rooms: string[]
+    rooms: string[],
+    setChats: Function
+    chats: { [chatroom: string]: ChatDialog[] }
 }
 
 function createTabs(tabs: string[], setCurrentTab: Function) {
@@ -53,65 +63,80 @@ function createTabs(tabs: string[], setCurrentTab: Function) {
 
 function Chat(props: ChatProps) {
 
+    // const [intervalSet, forceUpdate] = React.useState<boolean>(false);
     const [chatItems, setChatItems] = React.useState<ChatDialog[]>([])
     const [inputText, setInputText] = React.useState<string>("");
     const [currentTab, setCurrentTab] = React.useState<string | null>(null)
     // const [activeRooms, setActiveRooms] = React.useState<string[] | null>(null)
     const [websocket, setWebsocket] = React.useState<WebSocket | null>(null);
-    // if (activeRooms == null) {
-    //     fetch("https://localhost:8000/my-rooms", {
-    //         method: 'GET',
-    //         headers: {
-    //             'Content-Type': 'application/json',
-    //             'auth-token': props.token
-    //             // 'Content-Type': 'application/x-www-form-urlencoded',
-    //         },
-    //         mode: 'cors', // no-cors, *cors, same-origin
-    //     }).then(res => res.json())
-    //         .then(rooms => {
-    //             setActiveRooms(rooms);
-    //         });
+
+    if (props.rooms && props.rooms.length == 1 && currentTab == null) {
+        setCurrentTab(props.rooms[0]);
+    }
+
+    // if (!intervalSet) {
+    //     setInterval( () => {forceUpdate(true); console.log("UPDATED")}, 200);
     // }
 
-    console.log('F', chatItems);
     const chatItemsComponents = chatItems.map((dialog, i) => {
         return (
             <> <ListItem key={i} > <ListItemText key={i} primary={dialog.sender + ': ' + dialog.text} />  </ ListItem> <Divider /> </>)
     });
 
-    const chatItemst = chatMocks.map((dialog, i) => {
-        return (
-            <Fragment key={i}>
-                <Grid item xs={12}>
+    let chatItemst = null;
+    if (currentTab != null && currentTab in props.chats) {
+        console.log("HELLOOO");
+        chatItemst = props.chats[currentTab].map((dialog : ChatDialog, i : number) => {
+            return (
+                <Fragment key={i}>
+                    <Grid item xs={12}>
 
-                    <Typography variant="subtitle1" className="chat-sender">
-                        {dialog.sender}
-                    </Typography>
-                    <Typography variant="h6" className="chat-text">
-                        {dialog.text}
-                    </Typography>
+                        <Typography variant="subtitle1" className="chat-sender">
+                            {dialog.sender}
+                        </Typography>
+                        <Typography variant="h6" className="chat-text">
+                            {dialog.text}
+                        </Typography>
 
-                    <Divider />
-                </Grid>
-            </Fragment>
-        );
-    });
+                        <Divider />
+                    </Grid>
+                </Fragment>
+            );
+        });
+    }
+
 
     document.cookie = "MYCOOKIE";
     if (websocket == null) {
         const ws = new WebSocket(`wss://localhost:8000/chat?token=${encodeURI(props.token)}`, "echo-protocol");
         setWebsocket(ws);
-        ws.onmessage = (ev) => { console.log(chatItems); receiveMessage(JSON.parse(ev.data), chatItems, setChatItems) }
+        ws.onmessage = (ev) => { console.log("MESSAGE RECEIVED"); receiveMessage(JSON.parse(ev.data), props.setChats); }
         ws.onopen = (ev: any) => {
-            const object: WebsocketChat = {
+            const object: WebsocketChatToServer = {
                 token: props.token,
-                message: "hello"
+                message: "hello",
+                room: 'None'
             };
             ws.send(JSON.stringify(object));
         };
     }
 
 
+    const chatForm = <form onSubmit={(ev) => {
+        ev.preventDefault();
+        if (websocket != null && currentTab != null) {
+            sendMessage(websocket, props.token, inputText, setInputText, currentTab);
+        }
+        return false;
+    }}>
+        <FormControl id="chat-form">
+            <InputLabel htmlFor="chat-input-bar">Type here</InputLabel>
+            <Input id="chat-input-bar" value={inputText} onChange={(e) => { setInputText(e.target.value) }} />
+        </FormControl>
+        <Button variant="outlined" id="chat-button" type="submit">
+            Send
+            </Button>
+    </form>;
 
     return (
 
@@ -131,27 +156,12 @@ function Chat(props: ChatProps) {
 
                     <div>
                         <Grid container id="chat-form-container">
-                            {chatItemsComponents}
+                            {chatItemst}
                         </Grid>
                     </ div>
 
+                    {props.rooms != null && props.rooms.length > 0 ? chatForm : null}
                 </Grid>
-                <form onSubmit={(ev) => {
-                    ev.preventDefault();
-                    if (websocket != null) {
-                        sendMessage(websocket, props.token, inputText, setInputText);
-                    }
-                    return false;
-                }}>
-                    <FormControl id="chat-form">
-                        <InputLabel htmlFor="chat-input-bar">Type here</InputLabel>
-                        <Input id="chat-input-bar" value={inputText} onChange={(e) => { setInputText(e.target.value) }} />
-                    </FormControl>
-                    <Button variant="outlined" id="chat-button" type="submit">
-                        Send
-                        </Button>
-                </form>
-
             </Grid>
         </Paper>
 
@@ -159,31 +169,29 @@ function Chat(props: ChatProps) {
 
 }
 
-function receiveMessage(message: ChatDialog, currentChatItems: ChatDialog[], setChatItems: Function) {
-    const newDialogs = [];
-    let key = 0;
-    for (const chatItem of currentChatItems) {
-        newDialogs.push({ ...chatItem, key: key })
-        key++
-    }
-    newDialogs.push(message);
-    setChatItems(newDialogs);
-    console.log('xd', message, currentChatItems, newDialogs);
+function receiveMessage(message: WebsocketChatToClient, setChats: Function) {
+    const chatMessage: ChatDialog = { sender: message.username, text: message.message }
+    setChats(message.room, chatMessage);
 }
 
-function sendMessage(ws: WebSocket, token: string, message: string, clearInputText: Function) {
-    const payload = { token, message };
+function sendMessage(ws: WebSocket, token: string, message: string, clearInputText: Function, room: string) {
+    const payload: WebsocketChatToServer = { token, message, room };
     clearInputText('');
     console.log(ws);
     ws.send(JSON.stringify(payload));
-    console.log("SENT:", payload);
 }
 
 function mapStateToPros(state: any) {
     return {
         token: state.user.token,
-        rooms: state.user.rooms
+        rooms: state.user.rooms,
+        chats: state.user.chats
     }
 }
 
-export default connect(mapStateToPros)(Chat);
+const mapDispatchToProps = (dispatch: any) => ({
+    setChats: (room: string, chatMessage: ChatDialog) => dispatch(setChats(room, chatMessage))
+});
+
+
+export default connect(mapStateToPros, mapDispatchToProps)(Chat);

@@ -25,9 +25,9 @@ function fetchChatroom(setChatroomsList: Function, token: string) {
         .then(chatList => { setChatroomsList(chatList) });
 }
 
-async function joinChatroom(name: string, token: string, setChatrooms: Function, currentRooms: string[] | null) {
+async function getMyRooms(token: string, setChatrooms: Function) {
     try {
-        const response = await fetch("https://localhost:8000/rooms/" + encodeURI(name), {
+        const response = await fetch("https://localhost:8000/my-rooms", {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -36,29 +36,32 @@ async function joinChatroom(name: string, token: string, setChatrooms: Function,
             },
             mode: 'cors', // no-cors, *cors, same-origin
         });
-        // }).then(data => data.json())
-        //     .then(msg => {
-        //         console.log(msg)
-        //         // if no error
-        //         if (currentRooms == null) {
-        //             setChatrooms([name]);
-        //         } else {
-        //             if (currentRooms.filter(el => el === name).length === 0) {
-        //                 setChatrooms([...currentRooms, name]);
-        //             }
-        //         }
-        //     });
+
+        const rooms = await response.json();
+        setChatrooms(rooms);
+
+    } catch (error) {
+        console.log("Error retrieving rooms")
+    }
+}
+
+async function joinChatroom(name: string, token: string, setChatrooms: Function, currentRooms: string[] | null) {
+    try {
+        const response = await fetch("https://localhost:8000/joinrooms/" + encodeURI(name), {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                // 'Content-Type': 'application/x-www-form-urlencoded',
+                'auth-token': token,
+            },
+            mode: 'cors', // no-cors, *cors, same-origin
+        });
 
         const msg = await response.json();
         console.log(msg)
         // if no error
-        if (currentRooms == null) {
-            setChatrooms([name]);
-        } else {
-            if (currentRooms.filter(el => el === name).length === 0) {
-                setChatrooms([...currentRooms, name]);
-            }
-        }
+
+        await getMyRooms(token, setChatrooms);
     } catch (error) {
         console.log("Error joining rooms")
     }

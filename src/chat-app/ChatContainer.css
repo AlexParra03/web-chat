@@ -8,6 +8,10 @@
     padding-left: 20px;
 }
 
+.close-icon {
+    font-size: 17px !important;
+}
+
 #chat-form-container {
     
 }

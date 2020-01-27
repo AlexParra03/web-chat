@@ -25,7 +25,7 @@ function fetchChatroom(setChatroomsList: Function, token: string) {
         .then(chatList => { setChatroomsList(chatList) });
 }
 
-async function getMyRooms(token: string, setChatrooms: Function) {
+export async function getMyRooms(token: string, setChatrooms: Function) {
     try {
         const response = await fetch("https://localhost:8000/my-rooms", {
             method: 'GET',
@@ -47,7 +47,7 @@ async function getMyRooms(token: string, setChatrooms: Function) {
 
 async function joinChatroom(name: string, token: string, setChatrooms: Function, currentRooms: string[] | null) {
     try {
-        const response = await fetch("https://localhost:8000/joinrooms/" + encodeURI(name), {
+        const response = await fetch("https://localhost:8000/join-room/" + encodeURI(name), {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -80,7 +80,6 @@ function LeftMenu(props: LeftMenuProps) {
     const [chatroomsList, setChatroomsList] = React.useState<Chatroom[] | null>(null);
     const [createChatRedirect, setCreateChatRedirect] = React.useState<boolean>(false)
 
-    console.log(props.token);
     if (props.token != null && chatroomsList == null) {
         fetchChatroom(setChatroomsList, props.token);
     }

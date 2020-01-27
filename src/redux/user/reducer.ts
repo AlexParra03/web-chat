@@ -44,6 +44,11 @@ const userReducer = (state = INITIAL_STATE, action : {type: string, payload: any
                 object.chats[action.payload.room] = [ action.payload.chatMessage ]
                 return object;
             }
+        case ACTIONS.REMOVE_CHAT:
+            if(action.payload.room in object.chats) {
+                delete object.chats[action.payload.room];
+            }
+            return object;
 
         default:
             return state;

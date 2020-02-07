@@ -13,7 +13,7 @@
 }
 
 #chat-form-container {
-    
+    height: none !important;
 }
 
 #chat-form {

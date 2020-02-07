@@ -18,7 +18,6 @@ function isDescriptionValid(text: string) {
 export default function CreateChat() {
 
     const [chatData, setChatData] = React.useState<ChatData>({ title: null, description: null })
-
     return (
         <Paper >
             <Header />

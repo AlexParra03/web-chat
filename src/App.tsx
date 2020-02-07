@@ -35,6 +35,7 @@ const App: React.FC = (props: any) => {
     <Route path="/" exact  component={AppContent} />
   ];
 
+  // routes valid only when authenticated
   const authRoutes = [
     <Route path="/create-chat" exact component={CreateChat} />
   ];

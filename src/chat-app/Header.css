@@ -5,3 +5,11 @@
 .header-title {
     padding-right: 40%;
 }
+
+.menus {
+    padding-left: 35%;
+    width: 98%;
+}
+.menus button {
+    margin-left: 7px;
+}

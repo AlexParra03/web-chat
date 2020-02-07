@@ -78,15 +78,11 @@ interface LeftMenuProps {
 function LeftMenu(props: LeftMenuProps) {
 
     const [chatroomsList, setChatroomsList] = React.useState<Chatroom[] | null>(null);
-    const [createChatRedirect, setCreateChatRedirect] = React.useState<boolean>(false)
 
     if (props.token != null && chatroomsList == null) {
         fetchChatroom(setChatroomsList, props.token);
     }
 
-    if (createChatRedirect) {
-        return <Redirect to='/create-chat' />
-    }
 
     let chatItemsComponents: JSX.Element[] = [];
     if (chatroomsList != null) {
@@ -129,11 +125,6 @@ function LeftMenu(props: LeftMenuProps) {
                     {chatItemsComponents}
                 </List>
             </div>
-            <Button id="create-chat-button" variant="contained"
-                color="secondary"
-                onClick={(ev) => { setCreateChatRedirect(true) }}>
-                Create Chat
-            </Button>
         </List>
     );
 }

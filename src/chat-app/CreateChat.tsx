@@ -3,10 +3,15 @@ import { Drawer, List, ListItemText, Divider, Typography, Badge, ListItem, Paper
 import PersonIcon from '@material-ui/icons/Person';
 import "./CreateChat.css"
 import { Header } from './Header';
+import { connect } from 'react-redux';
 
 interface ChatData {
     title: string | null,
     description: string | null
+}
+
+interface CreateChatProps {
+    token: string
 }
 
 const DESCRIPTION_LIMIT = 20;
@@ -15,7 +20,7 @@ function isDescriptionValid(text: string) {
     return text.trim().split(' ').length <= DESCRIPTION_LIMIT && text !== '';
 }
 
-export default function CreateChat() {
+function CreateChat(props: CreateChatProps) {
 
     const [chatData, setChatData] = React.useState<ChatData>({ title: null, description: null })
     return (
@@ -59,18 +64,18 @@ export default function CreateChat() {
 
                 <Button variant="contained" color="primary" onClick={async (ev) => {
 
-                    // const response = await fetch("https://localhost:8000/register", {
-                    //     method: 'POST',
-                    //     headers: {
-                    //         'Content-Type': 'application/json'
-                    //         // 'Content-Type': 'application/x-www-form-urlencoded',
-                    //     },
-                    //     mode: 'cors', // no-cors, *cors, same-origin
-                    //     body: JSON.stringify(registerData)
-                    // });
-                    // const json = await response.json();
-                    // props.setToken(json.token);
-                    // console.log(json);
+                    const response = await fetch("https://localhost:8000/create-room", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'auth-token': props.token,
+
+                        },
+                        mode: 'cors', // no-cors, *cors, same-origin
+                        body: JSON.stringify(chatData)
+                    });
+                    const json = await response.json();
+                    console.log(json);
 
                 }}>
                     Create Chat
@@ -79,3 +84,9 @@ export default function CreateChat() {
         </Paper>
     );
 } 
+
+function mapStateToProps(state: any) {
+    return { token: state.user.token };
+  }
+  
+  export default connect(mapStateToProps)(CreateChat);

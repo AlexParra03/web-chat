@@ -20,6 +20,7 @@ import { Header } from './Header';
 import { connect } from 'react-redux';
 import setChats from '../redux/user/setChats';
 import removeChat from '../redux/user/removeChat';
+import setChatroomList from '../redux/user/setChatroomList';
 
 
 
@@ -54,7 +55,21 @@ interface ChatProps {
     setChats: Function,
     chats: { [chatroom: string]: ChatDialog[] }
     setRooms: Function,
-    removeChat: Function
+    removeChat: Function,
+    setChatroomList: Function
+}
+
+function fetchChatroom(setChatroomsList: Function, token: string) {
+    const response = fetch("https://localhost:8000/rooms", {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            // 'Content-Type': 'application/x-www-form-urlencoded',
+            'auth-token': token,
+        },
+        mode: 'cors', // no-cors, *cors, same-origin
+    }).then(data => data.json())
+        .then(chatList => { setChatroomsList(chatList) });
 }
 
 export async function getMyRooms(token: string, setChatrooms: Function) {
@@ -99,13 +114,14 @@ async function leaveChatroom(name: string, token: string) {
 
 }
 
-function createTabs(tabs: string[], setCurrentTab: Function, token: string, setRooms: Function, removeChat: Function) {
+function createTabs(tabs: string[], setCurrentTab: Function, token: string, setRooms: Function, removeChat: Function, setChatroomList: Function) {
     const tabsElements = [];
     for (const tab of tabs) {
         const tabLabel = <div>{tab} <CloseIcon className="close-icon" onClick={async (ev) => {
             console.log(tab);
             await leaveChatroom(tab, token);
             getMyRooms(token, setRooms);
+            fetchChatroom(setChatroomList, token);
             removeChat(tab);
         }} /> </div>
         tabsElements.push(
@@ -135,24 +151,23 @@ function Chat(props: ChatProps) {
             <> <ListItem key={i} > <ListItemText key={i} primary={dialog.sender + ': ' + dialog.text} />  </ ListItem> <Divider /> </>)
     });
 
-    let chatItemst = null;
+    let chatItemsList = null;
     if (currentTab != null && currentTab in props.chats) {
-        chatItemst = props.chats[currentTab].map((dialog: ChatDialog, i: number) => {
+        chatItemsList = props.chats[currentTab].map((dialog: ChatDialog, i: number) => {
             return (
-                <Fragment key={i}>
-                    <Grid item xs={12}>
+                // <Grid xs={12} id="chat-space" alignItems="flex-start" container direction="column">
+                <div key={i} className="chat-item-container">
 
-                        <Typography variant="subtitle1" className="chat-sender">
-                            {dialog.sender}
-                        </Typography>
-                        <Chip avatar={<Avatar>M</Avatar>} label="Clickable" />
-                        <Typography variant="h6" className="chat-text">
-                            {dialog.text}
-                        </Typography>
+                    <ListItem button className="chat-sender">
+                        <ListItemText primary={dialog.sender} />
+                    </ListItem>
+                    <ListItem className="dialog-text">
+                        <ListItemText primary={dialog.text} />
+                    </ListItem>
+                    <Divider />
+                </div>
 
-                        <Divider />
-                    </Grid>
-                </Fragment>
+                // </Grid>
             );
         });
     }
@@ -203,12 +218,15 @@ function Chat(props: ChatProps) {
 
                     {props.rooms != null && props.rooms.length > 0 ?
                         <Tabs value={currentTab} scrollButtons="auto" variant="scrollable" >
-                            {createTabs(props.rooms, setCurrentTab, props.token, props.setRooms, props.removeChat)}
+                            {createTabs(props.rooms, setCurrentTab, props.token, props.setRooms, props.removeChat, props.setChatroomList)}
                         </Tabs> : null}
 
                     <div>
                         <Grid container id="chat-form-container">
-                            {props.rooms != null && props.rooms.length > 0 ? chatItemst : null}
+                            <List component="nav" aria-label="main mailbox folders" id="chat-list-container">
+
+                                {props.rooms != null && props.rooms.length > 0 ? chatItemsList : null}
+                            </List>
                         </Grid>
                     </ div>
 
@@ -243,7 +261,8 @@ function mapStateToPros(state: any) {
 const mapDispatchToProps = (dispatch: any) => ({
     setChats: (room: string, chatMessage: ChatDialog) => dispatch(setChats(room, chatMessage)),
     setRooms: (rooms: string[]) => dispatch(setRooms(rooms)),
-    removeChat: (room: string) => dispatch(removeChat(room))
+    removeChat: (room: string) => dispatch(removeChat(room)),
+    setChatroomList: (rooms: Chatroom[]) => dispatch(setChatroomList(rooms))
 });
 
 

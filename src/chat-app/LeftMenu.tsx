@@ -5,6 +5,7 @@ import { Redirect } from 'react-router';
 import "./LeftMenu.css"
 import { connect } from 'react-redux';
 import setRooms from '../redux/user/setRooms';
+import setChatroomList from '../redux/user/setChatroomList';
 
 export interface Chatroom {
     name: string,
@@ -72,27 +73,29 @@ async function joinChatroom(name: string, token: string, setChatrooms: Function,
 interface LeftMenuProps {
     token: string
     setRooms: Function,
-    rooms: string[] | null
+    rooms: string[] | null,
+    roomlist: Chatroom[] | null,
+    setChatroomList: Function
 }
 
 function LeftMenu(props: LeftMenuProps) {
 
-    const [chatroomsList, setChatroomsList] = React.useState<Chatroom[] | null>(null);
-
-    if (props.token != null && chatroomsList == null) {
-        fetchChatroom(setChatroomsList, props.token);
+    // const [chatroomsList, setChatroomsList] = React.useState<Chatroom[] | null>(null);
+    if ( props.roomlist == null) {
+        fetchChatroom(props.setChatroomList, props.token);
     }
 
 
     let chatItemsComponents: JSX.Element[] = [];
-    if (chatroomsList != null) {
-        chatItemsComponents = chatroomsList.map((chatroom, i) => {
+    if (props.roomlist != null) {
+        console.log(props.roomlist, 'O');
+        chatItemsComponents = props.roomlist.map((chatroom, i) => {
             const chatRoomTitleAndUsers = <div> {chatroom.name} <Badge badgeContent={'' + chatroom.users}><PersonIcon color="primary"></PersonIcon> </Badge></div>
             return (
                 <ListItem button onClick={async (ev) => {
                     await joinChatroom(chatroom.name, props.token, props.setRooms, props.rooms);
                     // This refreshes stats after async call
-                    fetchChatroom(setChatroomsList, props.token);
+                    fetchChatroom(props.setChatroomList, props.token);
                 }}>
                     <ListItemText
                         key={i}
@@ -131,11 +134,13 @@ function LeftMenu(props: LeftMenuProps) {
 
 const mapStateToProps = (state: any) => ({
     token: state.user.token,
-    rooms: state.user.rooms
+    rooms: state.user.rooms,
+    roomlist: state.user.roomlist
 });
 
 const mapDispatchToProps = (dispatch: any) => ({
-    setRooms: (rooms: string[]) => dispatch(setRooms(rooms))
+    setRooms: (rooms: string[]) => dispatch(setRooms(rooms)),
+    setChatroomList: (rooms: Chatroom[]) => dispatch(setChatroomList(rooms))
 });
 
 

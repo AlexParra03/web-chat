@@ -28,15 +28,24 @@ export function Header(props: {}) {
     const [profileButtonRef, setProfileButtonRef] = React.useState<null | (EventTarget & HTMLButtonElement)>(null);
 
     const [redirectCreateChat, setRedirectCreateChat] = React.useState<boolean>(false);
+    const [redirectHome, setRedirectHome] = React.useState<boolean>(false);
 
-    // if we are not in the page already, then we can redirect
-    if (!window.location.href.includes("create-chat") && redirectCreateChat) {
-        return <Redirect to='/create-chat' />
+    let redirect = null;
+    if ( redirectCreateChat) {
+        redirect = <Redirect to='/create-chat' />
+    }
+
+    if (redirectHome) {
+        redirect = <Redirect to='/' />
     }
 
     return (
         <AppBar position="static">
+            {redirect}
             <Toolbar>
+                <Typography variant="h5" component="h3" onClick={() => {setRedirectHome(true)}}>
+                    APP NAME
+                </Typography>
                 <div className="menus">
                     <Button variant="contained" color="primary" onClick={(ev) => {
                         if (!!chatButtonRef) {
@@ -87,7 +96,7 @@ export function Header(props: {}) {
                                 setChatButtonRef(null);
                                 setFriendsButtonRef(null);
                             }}>
-                                <MenuList autoFocus={!!chatButtonRef} id="menu-list-grow" onKeyDown={() => { console.log("closed") }}>
+                                <MenuList autoFocus={!!chatButtonRef}>
                                     <MenuItem onClick={() => { alert("Not ready") }}>1v1</MenuItem>
                                     <MenuItem onClick={() => { alert("Not ready") }}>1v2</MenuItem>
                                     <MenuItem onClick={() => { setRedirectCreateChat(true) }}>Create Chatroom</MenuItem>
@@ -101,13 +110,13 @@ export function Header(props: {}) {
                     <Popper open={!!friendsButtonRef} anchorEl={friendsButtonRef} role={undefined} transition disablePortal>
 
                         <Paper>
-                            <ClickAwayListener  onClickAway={() => {
+                            <ClickAwayListener onClickAway={() => {
                                 setProfileButtonRef(null);
                                 setChatButtonRef(null);
                                 setFriendsButtonRef(null);
                             }}>
-                                <MenuList autoFocus={!!friendsButtonRef} id="menu-list-grow" onKeyDown={() => { console.log("closed") }}>
-                                    <MenuItem onClick={() => { console.log("closed") }}>Friends Online</MenuItem>
+                                <MenuList autoFocus={!!friendsButtonRef}>
+                                    <MenuItem onClick={() => { alert("Not ready") }}>Friends Online</MenuItem>
                                 </MenuList>
                             </ClickAwayListener>
                         </Paper>
@@ -116,14 +125,14 @@ export function Header(props: {}) {
                     <Popper open={!!profileButtonRef} anchorEl={profileButtonRef} role={undefined} transition disablePortal>
 
                         <Paper>
-                            <ClickAwayListener  onClickAway={() => {
+                            <ClickAwayListener onClickAway={() => {
                                 setProfileButtonRef(null);
                                 setChatButtonRef(null);
                                 setFriendsButtonRef(null);
                             }}>
-                                <MenuList autoFocus={!!profileButtonRef} id="menu-list-grow" onKeyDown={() => { console.log("closed") }}>
-                                    <MenuItem onClick={() => { console.log("closed") }}>My Settings</MenuItem>
-                                    <MenuItem onClick={() => { console.log("closed") }}>Log out</MenuItem>
+                                <MenuList autoFocus={!!profileButtonRef} onKeyDown={() => { console.log("closed") }}>
+                                    <MenuItem onClick={() => { alert("Not ready") }}>My Settings</MenuItem>
+                                    <MenuItem onClick={() => { alert("Not ready") }}>Log out</MenuItem>
                                 </MenuList>
                             </ClickAwayListener>
                         </Paper>

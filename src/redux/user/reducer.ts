@@ -1,19 +1,22 @@
 import ACTIONS from '../actions';
 import {ChatDialog} from '../../chat-app/ChatContainer';
+import {Chatroom} from '../../chat-app/LeftMenu';
 
 
 interface InitialState {
     currentUser: string | null,
     token: string | null,
     rooms: string[] | null,
-    chats: {[room: string] : ChatDialog[]}
+    chats: {[room: string] : ChatDialog[]},
+    roomlist: Chatroom[] | null
 }
 
 const INITIAL_STATE : InitialState = {
     currentUser: null,
     token: null,
     rooms: null,
-    chats: {}
+    chats: {},
+    roomlist: null
 };
 
 const userReducer = (state = INITIAL_STATE, action : {type: string, payload: any}) => {
@@ -50,6 +53,12 @@ const userReducer = (state = INITIAL_STATE, action : {type: string, payload: any
             }
             return object;
 
+        case ACTIONS.SET_CHATROOMS:
+            return {
+                ...object,
+                roomlist: action.payload.chatrooms
+            }
+        
         default:
             return state;
     }

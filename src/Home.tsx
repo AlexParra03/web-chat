@@ -35,7 +35,7 @@ function Home(props: any) {
     return (
         <Paper >
             <Typography variant="h5" component="h3">
-                Welcome to Social Chat
+                Welcome to APP NAME
             </Typography>
             <Typography component="p">
                 Register or login to start chatting...

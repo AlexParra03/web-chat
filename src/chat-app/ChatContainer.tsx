@@ -16,7 +16,7 @@ import { Redirect } from 'react-router-dom';
 import './ChatContainer.css'
 import LeftMenuMobil from './LeftMenuMobil';
 import LeftMenu from './LeftMenu';
-import { Header } from './Header';
+import Header from './Header';
 import { connect } from 'react-redux';
 import setChats from '../redux/user/setChats';
 import removeChat from '../redux/user/removeChat';

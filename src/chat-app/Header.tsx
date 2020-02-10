@@ -20,9 +20,35 @@ import DraftsIcon from '@material-ui/icons/Drafts';
 import SendIcon from '@material-ui/icons/Send';
 import { Popper, Grow, Paper, ClickAwayListener, MenuList } from "@material-ui/core";
 import { Redirect } from "react-router-dom";
+import { connect } from "react-redux";
+import setRooms from "../redux/user/setRooms";
 
+export async function getMyRooms(token: string, setChatrooms: Function) {
+    try {
+        const response = await fetch("https://localhost:8000/my-rooms", {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                // 'Content-Type': 'application/x-www-form-urlencoded',
+                'auth-token': token,
+            },
+            mode: 'cors', // no-cors, *cors, same-origin
+        });
 
-export function Header(props: {}) {
+        const rooms = await response.json();
+        setChatrooms(rooms);
+
+    } catch (error) {
+        console.log("Error retrieving rooms")
+    }
+}
+
+interface HeaderProps {
+    token: string,
+    setRooms: Function
+}
+
+function Header(props: HeaderProps) {
     const [chatButtonRef, setChatButtonRef] = React.useState<null | (EventTarget & HTMLButtonElement)>(null);
     const [friendsButtonRef, setFriendsButtonRef] = React.useState<null | (EventTarget & HTMLButtonElement)>(null);
     const [profileButtonRef, setProfileButtonRef] = React.useState<null | (EventTarget & HTMLButtonElement)>(null);
@@ -31,7 +57,7 @@ export function Header(props: {}) {
     const [redirectHome, setRedirectHome] = React.useState<boolean>(false);
 
     let redirect = null;
-    if ( redirectCreateChat) {
+    if (redirectCreateChat) {
         redirect = <Redirect to='/create-chat' />
     }
 
@@ -43,7 +69,7 @@ export function Header(props: {}) {
         <AppBar position="static">
             {redirect}
             <Toolbar>
-                <Typography variant="h5" component="h3" onClick={() => {setRedirectHome(true)}}>
+                <Typography variant="h5" component="h3" onClick={() => { setRedirectHome(true) }}>
                     APP NAME
                 </Typography>
                 <div className="menus">
@@ -97,7 +123,26 @@ export function Header(props: {}) {
                                 setFriendsButtonRef(null);
                             }}>
                                 <MenuList autoFocus={!!chatButtonRef}>
-                                    <MenuItem onClick={() => { alert("Not ready") }}>1v1</MenuItem>
+                                    <MenuItem onClick={async () => {
+                                        try {
+                                            const response = await fetch("https://localhost:8000/join-2personqueue", {
+                                                method: 'GET',
+                                                headers: {
+                                                    'Content-Type': 'application/json',
+                                                    // 'Content-Type': 'application/x-www-form-urlencoded',
+                                                    'auth-token': props.token,
+                                                },
+                                                mode: 'cors', // no-cors, *cors, same-origin
+                                            });
+
+                                            const msg = await response.json();
+                                            // if no error
+                                            
+                                            getMyRooms(props.token, props.setRooms);
+                                        } catch (error) {
+                                            console.log("Error joining rooms")
+                                        }
+                                    }}>1v1</MenuItem>
                                     <MenuItem onClick={() => { alert("Not ready") }}>1v2</MenuItem>
                                     <MenuItem onClick={() => { setRedirectCreateChat(true) }}>Create Chatroom</MenuItem>
                                 </MenuList>
@@ -145,3 +190,16 @@ export function Header(props: {}) {
         </AppBar>
     )
 }
+
+const mapDispatchToProps = (dispatch: any) => ({
+    setRooms: (rooms: string[]) => dispatch(setRooms(rooms)),
+});
+
+function mapStateToPros(state: any) {
+    return {
+        token: state.user.token
+    }
+}
+
+
+export default connect(mapStateToPros, mapDispatchToProps)(Header);

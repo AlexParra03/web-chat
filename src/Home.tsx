@@ -1,7 +1,7 @@
 import React from 'react';
 import Typography from '@material-ui/core/Typography';
 import { Paper, FormControl, InputLabel, Input, TextField, Grid, Button } from '@material-ui/core';
-import { Header } from './chat-app/Header';
+import Header from './chat-app/Header';
 
 // import {Redirect} from 'react-router';
 import "./Home.css";

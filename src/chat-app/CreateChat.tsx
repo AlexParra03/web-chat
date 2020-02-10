@@ -2,7 +2,7 @@ import React from 'react';
 import { Drawer, List, ListItemText, Divider, Typography, Badge, ListItem, Paper, TextField, Button } from '@material-ui/core';
 import PersonIcon from '@material-ui/icons/Person';
 import "./CreateChat.css"
-import { Header } from './Header';
+import Header from './Header';
 import { connect } from 'react-redux';
 
 interface ChatData {

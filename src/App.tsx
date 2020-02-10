@@ -2,7 +2,7 @@ import React, { Children } from 'react';
 import logo from './logo.svg';
 import './App.css';
 import ChatContainer from './chat-app/ChatContainer';
-import { Header } from './chat-app/Header';
+import Header from './chat-app/Header';
 import { BrowserRouter as Router, Switch, Route, Redirect } from 'react-router-dom';
 import Home from './Home';
 import { createStore } from 'redux';
